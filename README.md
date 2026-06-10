@@ -4,7 +4,7 @@ Auditra é uma plataforma SaaS voltada para governança, compliance e rastreabil
 
 A proposta é centralizar em um único ambiente digital o registro de horas, evidências técnicas, aprovações, custos, entregáveis e relatórios de auditoria. Com isso, a plataforma ajuda empresas, universidades, institutos de pesquisa e centros de inovação a comprovarem melhor suas atividades de P&D.
 
-O projeto nasce a partir da necessidade de reduzir controles manuais, planilhas descentralizadas e falhas na prestação de contas em projetos ligados à inovação, Lei do Bem e programas regulatórios de P&D. :contentReference[oaicite:0]{index=0}
+O projeto nasce a partir da necessidade de reduzir controles manuais, planilhas descentralizadas e falhas na prestação de contas em projetos ligados à inovação, Lei do Bem e programas regulatórios de P&D.
 
 ## Objetivo
 

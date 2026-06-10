@@ -91,16 +91,18 @@ A plataforma poderá acompanhar indicadores como:
 - Volume de contratos em negociação;
 - Tempo médio de resolução de suporte.
 
-## Tecnologias sugeridas
+## Tecnologias escolhidas
 
-Este repositório pode ser desenvolvido usando:
+O projeto será desenvolvido usando uma stack com foco em custo zero na fase inicial.
 
-- Frontend: React ou Next.js
-- Backend: Node.js
-- Banco de dados: PostgreSQL
-- Autenticação: JWT ou Auth.js
-- Armazenamento de arquivos: S3, MinIO ou Firebase Storage
-- Deploy: Docker, Vercel, Railway ou Render
+- Frontend: React
+- Backend/BaaS: Firebase
+- Banco de dados principal: Neon PostgreSQL
+- Autenticação: Firebase Authentication
+- Armazenamento de arquivos: Firebase Storage
+- Deploy do frontend: Vercel
+- API/rotas protegidas: Vercel Serverless Functions
+- ORM sugerido: Prisma ou Drizzle
 
 ## Estrutura inicial sugerida
 

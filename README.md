@@ -1,120 +1,24 @@
 # Auditra SaaS
 
-Auditra é uma plataforma SaaS voltada para governança, compliance e rastreabilidade de projetos de Pesquisa e Desenvolvimento.
+Frontend React + Vite da plataforma Auditra, uma solução SaaS para governança, compliance e rastreabilidade em projetos de Pesquisa e Desenvolvimento.
 
-A proposta é centralizar em um único ambiente digital o registro de horas, evidências técnicas, aprovações, custos, entregáveis e relatórios de auditoria. Com isso, a plataforma ajuda empresas, universidades, institutos de pesquisa e centros de inovação a comprovarem melhor suas atividades de P&D.
+## Rodar localmente
 
-O projeto nasce a partir da necessidade de reduzir controles manuais, planilhas descentralizadas e falhas na prestação de contas em projetos ligados à inovação, Lei do Bem e programas regulatórios de P&D.
+```bash
+npm install
+npm run dev
+```
 
-## Objetivo
+## Build
 
-Criar uma plataforma simples, segura e auditável para acompanhar projetos de P&D do início ao fechamento mensal.
+```bash
+npm run build
+npm run preview
+```
 
-A Auditra busca ajudar organizações a:
+## Deploy no Render
 
-- Registrar horas trabalhadas por pesquisadores e especialistas;
-- Anexar evidências técnicas das atividades;
-- Relacionar custos, entregáveis e aprovações;
-- Gerar trilha de auditoria por projeto;
-- Reduzir retrabalho documental;
-- Apoiar auditorias fiscais, técnicas e regulatórias.
-
-## Problema
-
-Muitas organizações ainda controlam projetos de P&D usando planilhas, documentos soltos, e-mails e processos manuais.
-
-Isso dificulta a comprovação de:
-
-- Quem trabalhou em cada atividade;
-- Quantas horas foram dedicadas;
-- Quais evidências foram entregues;
-- Quais custos estão ligados a cada etapa;
-- Quais aprovações foram realizadas;
-- Quais documentos estão prontos para auditoria.
-
-Essa falta de rastreabilidade pode gerar riscos como glosas, multas, perda de incentivos fiscais e dificuldade na prestação de contas.
-
-## Solução
-
-A Auditra propõe um fluxo digital para acompanhar todo o ciclo documental de projetos de P&D.
-
-Fluxo principal:
-
-1. Cadastro da empresa cliente;
-2. Cadastro do projeto de P&D;
-3. Registro semanal de horas;
-4. Upload de evidências técnicas;
-5. Validação pelo gerente de P&D;
-6. Solicitação de correções, se necessário;
-7. Consolidação documental automática;
-8. Geração de relatório técnico e fiscal;
-9. Revisão interna;
-10. Aprovação final;
-11. Fechamento mensal do projeto.
-
-## Público-alvo
-
-A plataforma é voltada para:
-
-- Empresas que usam incentivos fiscais da Lei do Bem;
-- Organizações com projetos regulados de P&D;
-- Universidades;
-- Institutos de pesquisa;
-- Centros universitários;
-- Gestores de P&D;
-- Equipes financeiras e fiscais;
-- Profissionais de compliance;
-- Pesquisadores.
-
-## Funcionalidades previstas
-
-- Cadastro de clientes;
-- Cadastro de projetos de P&D;
-- Cadastro de pesquisadores e equipes;
-- Registro semanal de horas;
-- Upload de evidências técnicas;
-- Controle de aprovações;
-- Geração de relatórios;
-- Trilha de auditoria por projeto;
-- Dashboard de indicadores;
-- Controle de custos e entregáveis;
-- Gestão de status documental;
-- Exportação de documentos para auditoria.
-
-## KPIs principais
-
-A plataforma poderá acompanhar indicadores como:
-
-- Taxa de preenchimento de horas;
-- Taxa de envio de evidências;
-- Tempo médio de validação técnica;
-- Volume de contratos em negociação;
-- Tempo médio de resolução de suporte.
-
-## Tecnologias escolhidas
-
-O projeto será desenvolvido usando uma stack com foco em custo zero na fase inicial.
-
-- Frontend: React
-- Backend/BaaS: Firebase
-- Banco de dados principal: Neon PostgreSQL
-- Autenticação: Firebase Authentication
-- Armazenamento de arquivos: Firebase Storage
-- Deploy do frontend: Vercel
-- API/rotas protegidas: Vercel Serverless Functions
-- ORM sugerido: Prisma ou Drizzle
-
-## Estrutura inicial sugerida
-
-```txt
-auditra-saas/
-├── docs/
-│   └── planejamento.md
-├── frontend/
-│   └── README.md
-├── backend/
-│   └── README.md
-├── database/
-│   └── schema.sql
-├── README.md
-└── .gitignore
+- Tipo: Static Site
+- Build Command: `npm install && npm run build`
+- Publish Directory: `dist`
+- Rewrite para SPA: `/* -> /index.html`

@@ -81,7 +81,7 @@ export function updateApprovalStatus(id, status) {
 export const apiConfig = {
   baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   futureHosting: 'Render Web Service com Node.js',
-  database: 'Neon PostgreSQL',
-  storage: 'Firebase Storage',
+  database: 'Cloud Firestore para evidências e auditoria',
+  storage: 'Supabase Storage',
   auth: 'Firebase Authentication'
 };

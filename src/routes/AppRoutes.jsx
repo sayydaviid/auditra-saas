@@ -13,24 +13,27 @@ import Reports from '../pages/Reports';
 import Settings from '../pages/Settings';
 import TimeEntries from '../pages/TimeEntries';
 import Users from '../pages/Users';
+import ProtectedRoute from './ProtectedRoute';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
-      <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/projetos" element={<Projects />} />
-        <Route path="/projetos/:id" element={<ProjectDetail />} />
-        <Route path="/horas" element={<TimeEntries />} />
-        <Route path="/evidencias" element={<Evidence />} />
-        <Route path="/aprovacoes" element={<Approvals />} />
-        <Route path="/relatorios" element={<Reports />} />
-        <Route path="/auditoria" element={<Audit />} />
-        <Route path="/empresas" element={<Companies />} />
-        <Route path="/usuarios" element={<Users />} />
-        <Route path="/configuracoes" element={<Settings />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projetos" element={<Projects />} />
+          <Route path="/projetos/:id" element={<ProjectDetail />} />
+          <Route path="/horas" element={<TimeEntries />} />
+          <Route path="/evidencias" element={<Evidence />} />
+          <Route path="/aprovacoes" element={<Approvals />} />
+          <Route path="/relatorios" element={<Reports />} />
+          <Route path="/auditoria" element={<Audit />} />
+          <Route path="/empresas" element={<Companies />} />
+          <Route path="/usuarios" element={<Users />} />
+          <Route path="/configuracoes" element={<Settings />} />
+        </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

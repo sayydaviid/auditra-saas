@@ -14,11 +14,11 @@ const schema = z.object({
   project: z.string().min(1, 'Projeto obrigatório'),
   type: z.string().min(1, 'Tipo obrigatório'),
   title: z.string().trim().min(1, 'Título obrigatório'),
-  description: z.string().trim().min(8, 'Descrição obrigatória'),
-  relatedActivity: z.string().optional(),
+  description: z.string().trim().min(1, 'Descrição obrigatória'),
+  activityRelated: z.string().optional(),
   file: z
     .any()
-    .refine((files) => files?.length > 0, 'Selecione um arquivo para simular o envio')
+    .refine((files) => files?.length > 0, 'Arquivo obrigatório')
     .refine((files) => !files?.[0] || files[0].size <= maxFileSize, 'Arquivo deve ter até 10 MB')
 });
 
@@ -36,7 +36,7 @@ export default function EvidenceForm({ projects = [], onSubmit }) {
       type: '',
       title: '',
       description: '',
-      relatedActivity: '',
+      activityRelated: '',
       file: undefined
     }
   });
@@ -45,26 +45,30 @@ export default function EvidenceForm({ projects = [], onSubmit }) {
 
   async function submit(data) {
     const { file, ...payload } = data;
-    await onSubmit({ ...payload, fileName: file[0].name });
-    reset();
+    try {
+      await onSubmit({ ...payload, file: file[0] });
+      reset();
+    } catch {
+      // O componente pai exibe a mensagem de erro e os dados preenchidos são preservados.
+    }
   }
 
   return (
     <form className="form-grid" onSubmit={handleSubmit(submit)}>
-      <Select label="Projeto" options={projects.map((project) => project.name)} error={errors.project?.message} {...register('project')} />
+      <Select label="Projeto" options={projects.map((project) => ({ value: project.id, label: project.name }))} error={errors.project?.message} {...register('project')} />
       <Select label="Tipo de evidência" options={evidenceTypes} error={errors.type?.message} {...register('type')} />
       <Input label="Título" error={errors.title?.message} {...register('title')} />
-      <Input label="Atividade relacionada" placeholder="Ex: Testes, Desenvolvimento" {...register('relatedActivity')} />
+      <Input label="Atividade relacionada" placeholder="Ex: Testes, Desenvolvimento" {...register('activityRelated')} />
       <Textarea className="field-full" label="Descrição" rows={4} error={errors.description?.message} {...register('description')} />
       <label className={`upload-area field-full ${errors.file ? 'upload-error' : ''}`}>
         <UploadCloud size={34} />
         <strong>{selectedFile?.name || 'Clique para selecionar um arquivo'}</strong>
-        <span>Upload simulado. Integração futura com Firebase Storage.</span>
+        <span>O arquivo será enviado com segurança para o Supabase Storage.</span>
         <input type="file" {...register('file')} />
       </label>
       {errors.file && <small className="field-error field-full">{errors.file.message}</small>}
       <div className="form-actions field-full">
-        <Button type="submit" disabled={isSubmitting}>Enviar evidência</Button>
+        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Enviando evidência...' : 'Enviar evidência'}</Button>
       </div>
     </form>
   );

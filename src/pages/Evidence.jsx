@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, ClipboardList, FileUp } from 'lucide-react';
 import EvidenceForm from '../components/forms/EvidenceForm';
 import PageHeader from '../components/shared/PageHeader';
@@ -6,25 +6,70 @@ import StatCard from '../components/shared/StatCard';
 import StatusBadge from '../components/shared/StatusBadge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
-import { createEvidence } from '../lib/api';
-import { evidence, projects } from '../data/mockData';
+import { useAuth } from '../contexts/AuthContext';
+import { projects } from '../data/mockData';
+import { listEvidences, uploadEvidence } from '../services/evidenceService';
 
 const evidenceTypes = ['Documento técnico', 'Relatório', 'Código-fonte', 'Imagem', 'Planilha', 'Ata de reunião', 'Publicação', 'Outro'];
 const statuses = ['Enviada', 'Em análise', 'Aprovada', 'Reprovada'];
 
+function formatTimestamp(value) {
+  const date = value?.toDate ? value.toDate() : value instanceof Date ? value : null;
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return 'Processando...';
+  }
+
+  return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+function normalizeEvidence(item) {
+  const project = projects.find((projectItem) => projectItem.id === item.projectId);
+
+  return {
+    ...item,
+    project: project?.name || item.projectId || 'Projeto não informado',
+    type: item.evidenceType || 'Não informado',
+    owner: item.userName || item.userEmail || 'Usuário não informado',
+    date: formatTimestamp(item.createdAt)
+  };
+}
+
 export default function Evidence() {
-  const [items, setItems] = useState(evidence);
+  const { currentUser, userProfile } = useAuth();
+  const [items, setItems] = useState([]);
   const [projectFilter, setProjectFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [listError, setListError] = useState('');
+
+  async function loadEvidenceList() {
+    setIsLoading(true);
+    setListError('');
+
+    try {
+      const result = await listEvidences();
+      setItems(result.map(normalizeEvidence));
+    } catch (error) {
+      console.error(error);
+      setItems([]);
+      setListError(error.message || 'Não foi possível carregar as evidências.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadEvidenceList();
+  }, []);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
-      const byProject = !projectFilter || item.project === projectFilter;
+      const byProject = !projectFilter || item.projectId === projectFilter;
       const byType = !typeFilter || item.type === typeFilter;
       const byStatus = !statusFilter || item.status === statusFilter;
       return byProject && byType && byStatus;
@@ -32,16 +77,37 @@ export default function Evidence() {
   }, [items, projectFilter, typeFilter, statusFilter]);
 
   async function handleCreate(data) {
-    const project = projects.find((item) => item.name === data.project);
-    const created = await createEvidence({
-      ...data,
-      projectId: project?.id || '',
-      id: `e-local-${Date.now()}`
-    });
+    setFeedback(null);
 
-    setItems((current) => [created, ...current]);
-    setFeedback('Evidência adicionada visualmente. Upload real ficará para Firebase Storage.');
-    window.setTimeout(() => setFeedback(''), 3500);
+    try {
+      await uploadEvidence({
+        file: data.file,
+        projectId: data.project,
+        title: data.title,
+        description: data.description,
+        evidenceType: data.type,
+        activityRelated: data.activityRelated,
+        user: {
+          uid: currentUser?.uid,
+          email: currentUser?.email,
+          displayName: userProfile?.fullName || currentUser?.displayName || currentUser?.email
+        }
+      });
+      await loadEvidenceList();
+      setFeedback({ type: 'success', message: 'Evidência enviada com sucesso.' });
+    } catch (error) {
+      console.error(error);
+      const configurationError = [
+        'Supabase não configurado. Verifique o arquivo .env.',
+        'Firebase não configurado. Verifique o arquivo .env.'
+      ].includes(error.message);
+
+      setFeedback({
+        type: 'error',
+        message: configurationError ? error.message : 'Não foi possível enviar a evidência.'
+      });
+      throw error;
+    }
   }
 
   const columns = [
@@ -51,15 +117,23 @@ export default function Evidence() {
       render: (row) => (
         <div className="table-title-cell">
           <strong>{row.title}</strong>
-          <span>{row.fileName}</span>
+          <span>{row.description}</span>
         </div>
       )
     },
     { key: 'project', label: 'Projeto' },
     { key: 'type', label: 'Tipo' },
-    { key: 'owner', label: 'Responsável' },
+    { key: 'fileName', label: 'Arquivo' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'actions', label: 'Ações', render: () => <Button variant="ghost" size="sm">Visualizar</Button> }
+    { key: 'date', label: 'Data de envio' },
+    { key: 'owner', label: 'Usuário' },
+    {
+      key: 'actions',
+      label: 'Ações',
+      render: (row) => row.fileUrl
+        ? <Button as="a" href={row.fileUrl} target="_blank" rel="noreferrer" variant="ghost" size="sm">Ver arquivo</Button>
+        : '-'
+    }
   ];
 
   const approvedCount = items.filter((item) => item.status === 'Aprovada').length;
@@ -78,18 +152,27 @@ export default function Evidence() {
         <StatCard title="Pendentes" value={pendingCount} subtitle="Aguardando análise" icon={ClipboardList} tone="orange" />
       </div>
 
-      <Card title="Enviar nova evidência" description="Upload simulado, pronto para integração futura com Firebase Storage.">
-        {feedback && <div className="form-feedback success">{feedback}</div>}
+      <Card title="Enviar nova evidência" description="Arquivo no Supabase Storage e metadados no Cloud Firestore.">
+        {feedback && <div className={`form-feedback ${feedback.type}`}>{feedback.message}</div>}
         <EvidenceForm projects={projects} onSubmit={handleCreate} />
       </Card>
 
       <Card title="Lista de evidências" description={`${filtered.length} evidência(s) encontrada(s)`}>
         <div className="filters-row compact">
-          <Select label="Projeto" options={projects.map((project) => project.name)} value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} placeholder="Todos" />
+          <Select
+            label="Projeto"
+            options={projects.map((project) => ({ value: project.id, label: project.name }))}
+            value={projectFilter}
+            onChange={(event) => setProjectFilter(event.target.value)}
+            placeholder="Todos"
+          />
           <Select label="Tipo" options={evidenceTypes} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} placeholder="Todos" />
           <Select label="Status" options={statuses} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} placeholder="Todos" />
         </div>
-        <Table columns={columns} data={filtered} emptyTitle="Nenhuma evidência encontrada" />
+        {listError && <div className="form-feedback error">{listError}</div>}
+        {isLoading
+          ? <div className="content-loading">Carregando evidências...</div>
+          : <Table columns={columns} data={filtered} emptyTitle="Nenhuma evidência enviada ainda." />}
       </Card>
     </div>
   );

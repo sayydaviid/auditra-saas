@@ -1,4 +1,6 @@
-import { Bell, Menu, Search } from 'lucide-react';
+import { Bell, LogOut, Menu, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -14,7 +16,16 @@ const pageNames = {
 };
 
 export default function Header({ pathname, onOpenMobile }) {
+  const navigate = useNavigate();
+  const { currentUser, userProfile, logout } = useAuth();
   const pageTitle = pathname.startsWith('/projetos/') ? 'Detalhe do Projeto' : pageNames[pathname] || 'Auditra';
+  const displayName = userProfile?.fullName || currentUser?.displayName || currentUser?.email || 'Usuário';
+  const avatarLetter = displayName.charAt(0).toUpperCase();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <header className="topbar">
@@ -39,12 +50,15 @@ export default function Header({ pathname, onOpenMobile }) {
           <span>3</span>
         </button>
         <div className="user-chip">
-          <div className="avatar">MA</div>
+          <div className="avatar">{avatarLetter}</div>
           <div>
-            <strong>Marina Azevedo</strong>
-            <small>Administrador</small>
+            <strong>{displayName}</strong>
+            <small>Usuário autenticado</small>
           </div>
         </div>
+        <button className="icon-button" type="button" onClick={handleLogout} aria-label="Sair">
+          <LogOut size={20} />
+        </button>
       </div>
     </header>
   );

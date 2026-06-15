@@ -7,9 +7,9 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 
 const integrations = [
-  { name: 'Firebase Authentication', description: 'Login, recuperação de senha e controle de sessão.', status: 'Planejado' },
-  { name: 'Firebase Storage', description: 'Armazenamento de evidências técnicas e documentos.', status: 'Planejado' },
-  { name: 'Neon PostgreSQL', description: 'Banco principal para dados transacionais da plataforma.', status: 'Planejado' },
+  { name: 'Firebase Authentication', description: 'Login e controle de sessão das rotas internas.', status: 'Integrado' },
+  { name: 'Cloud Firestore', description: 'Metadados de evidências e eventos de auditoria.', status: 'Integrado' },
+  { name: 'Supabase Storage', description: 'Armazenamento dos arquivos de evidências técnicas.', status: 'Integrado' },
   { name: 'API Node.js', description: 'Web Service para regras de negócio e integração com banco.', status: 'Planejado' },
   { name: 'Render', description: 'Deploy do frontend como Static Site e API como Web Service.', status: 'Planejado' }
 ];
@@ -57,7 +57,7 @@ export default function Settings() {
         </Card>
       </div>
 
-      <Card title="Integrações futuras" description="Estrutura preparada para backend e serviços externos.">
+      <Card title="Integrações" description="Serviços integrados e componentes planejados para as próximas etapas.">
         <div className="integration-grid">
           {integrations.map((integration) => (
             <article className="integration-card" key={integration.name}>

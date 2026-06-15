@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
@@ -30,6 +31,12 @@ const navItems = [
 
 export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
@@ -69,7 +76,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-link logout" type="button" onClick={() => navigate('/login')}>
+        <button className="sidebar-link logout" type="button" onClick={handleLogout}>
           <LogOut size={19} />
           {!collapsed && <span>Sair</span>}
         </button>

@@ -8,6 +8,7 @@ import Card from '../components/ui/Card';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import { projects } from '../data/mockData';
+import { getFriendlyErrorMessage, logTechnicalError } from '../lib/errorMessages';
 import { listAuditEvents } from '../services/auditService';
 
 const periods = ['Hoje', 'Últimos 7 dias', 'Últimos 30 dias', 'Todo o período'];
@@ -80,8 +81,8 @@ export default function Audit() {
         const result = await listAuditEvents();
         setItems(result.map(normalizeAuditEvent));
       } catch (loadError) {
-        console.error(loadError);
-        setError(loadError.message || 'Não foi possível carregar os eventos de auditoria.');
+        logTechnicalError('Falha ao carregar eventos de auditoria.', loadError);
+        setError(getFriendlyErrorMessage(loadError, 'Não foi possível carregar os eventos de auditoria.'));
       } finally {
         setIsLoading(false);
       }

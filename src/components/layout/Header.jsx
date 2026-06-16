@@ -1,6 +1,8 @@
 import { Bell, LogOut, Menu, Search } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { getFriendlyErrorMessage, logTechnicalError } from '../../lib/errorMessages';
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -18,13 +20,25 @@ const pageNames = {
 export default function Header({ pathname, onOpenMobile }) {
   const navigate = useNavigate();
   const { currentUser, userProfile, logout } = useAuth();
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const pageTitle = pathname.startsWith('/projetos/') ? 'Detalhe do Projeto' : pageNames[pathname] || 'Auditra';
   const displayName = userProfile?.fullName || currentUser?.displayName || currentUser?.email || 'Usuário';
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
   async function handleLogout() {
-    await logout();
-    navigate('/login', { replace: true });
+    setLogoutError('');
+    setLogoutLoading(true);
+
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      logTechnicalError('Falha ao sair da conta.', error);
+      setLogoutError(getFriendlyErrorMessage(error, 'Não foi possível sair da conta agora.'));
+    } finally {
+      setLogoutLoading(false);
+    }
   }
 
   return (
@@ -45,6 +59,7 @@ export default function Header({ pathname, onOpenMobile }) {
       </div>
 
       <div className="topbar-actions">
+        {logoutError && <div className="form-feedback error logout-feedback" role="alert">{logoutError}</div>}
         <button className="notification-button" type="button" aria-label="Notificações">
           <Bell size={20} />
           <span>3</span>
@@ -56,7 +71,7 @@ export default function Header({ pathname, onOpenMobile }) {
             <small>Usuário autenticado</small>
           </div>
         </div>
-        <button className="icon-button" type="button" onClick={handleLogout} aria-label="Sair">
+        <button className="icon-button" type="button" onClick={handleLogout} aria-label="Sair" disabled={logoutLoading}>
           <LogOut size={20} />
         </button>
       </div>

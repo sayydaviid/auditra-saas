@@ -10,6 +10,7 @@ import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import { useAuth } from '../contexts/AuthContext';
 import { projects } from '../data/mockData';
+import { getFriendlyErrorMessage, logTechnicalError } from '../lib/errorMessages';
 import { listEvidences, uploadEvidence } from '../services/evidenceService';
 
 const evidenceTypes = ['Documento técnico', 'Relatório', 'Código-fonte', 'Imagem', 'Planilha', 'Ata de reunião', 'Publicação', 'Outro'];
@@ -46,6 +47,8 @@ export default function Evidence() {
   const [feedback, setFeedback] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [savingMetadataLoading, setSavingMetadataLoading] = useState(false);
 
   async function loadEvidenceList() {
     setIsLoading(true);
@@ -55,9 +58,9 @@ export default function Evidence() {
       const result = await listEvidences();
       setItems(result.map(normalizeEvidence));
     } catch (error) {
-      console.error(error);
+      logTechnicalError('Falha ao carregar lista de evidências.', error);
       setItems([]);
-      setListError(error.message || 'Não foi possível carregar as evidências.');
+      setListError(getFriendlyErrorMessage(error, 'Não foi possível carregar as evidências.'));
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +83,7 @@ export default function Evidence() {
     setFeedback(null);
 
     try {
-      await uploadEvidence({
+      const result = await uploadEvidence({
         file: data.file,
         projectId: data.project,
         title: data.title,
@@ -91,22 +94,33 @@ export default function Evidence() {
           uid: currentUser?.uid,
           email: currentUser?.email,
           displayName: userProfile?.fullName || currentUser?.displayName || currentUser?.email
-        }
+        },
+        onUploadStart: () => setUploadLoading(true),
+        onUploadEnd: () => setUploadLoading(false),
+        onMetadataSaveStart: () => setSavingMetadataLoading(true),
+        onMetadataSaveEnd: () => setSavingMetadataLoading(false)
       });
       await loadEvidenceList();
+
+      if (result.auditEventStatus === 'failed') {
+        setFeedback({
+          type: 'error',
+          message: getFriendlyErrorMessage(result.auditEventError, 'A evidência foi enviada, mas o evento de auditoria não foi registrado.')
+        });
+        return;
+      }
+
       setFeedback({ type: 'success', message: 'Evidência enviada com sucesso.' });
     } catch (error) {
-      console.error(error);
-      const configurationError = [
-        'Supabase não configurado. Verifique o arquivo .env.',
-        'Firebase não configurado. Verifique o arquivo .env.'
-      ].includes(error.message);
-
+      logTechnicalError('Falha ao enviar evidência.', error);
       setFeedback({
         type: 'error',
-        message: configurationError ? error.message : 'Não foi possível enviar a evidência.'
+        message: getFriendlyErrorMessage(error, 'Não foi possível enviar a evidência.')
       });
       throw error;
+    } finally {
+      setUploadLoading(false);
+      setSavingMetadataLoading(false);
     }
   }
 
@@ -154,7 +168,12 @@ export default function Evidence() {
 
       <Card title="Enviar nova evidência" description="Arquivo no Supabase Storage e metadados no Cloud Firestore.">
         {feedback && <div className={`form-feedback ${feedback.type}`}>{feedback.message}</div>}
-        <EvidenceForm projects={projects} onSubmit={handleCreate} />
+        <EvidenceForm
+          projects={projects}
+          onSubmit={handleCreate}
+          uploadLoading={uploadLoading}
+          savingMetadataLoading={savingMetadataLoading}
+        />
       </Card>
 
       <Card title="Lista de evidências" description={`${filtered.length} evidência(s) encontrada(s)`}>

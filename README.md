@@ -22,9 +22,8 @@ O projeto será desenvolvido com:
 * React Hook Form
 * Zod
 * Firebase Authentication
-* Firebase Storage
-* Neon PostgreSQL
-* API em Node.js
+* Cloud Firestore
+* Supabase Storage
 * Deploy no Render
 * GitHub para versionamento
 
@@ -85,11 +84,13 @@ Principais responsabilidades:
 * Proteger rotas internas para usuários logados.
 * Criar contexto de autenticação no React.
 * Criar controle simples de sessão.
-* Configurar Firebase Storage.
+* Configurar Supabase Storage.
 * Implementar upload real de evidências.
-* Salvar arquivos de evidência no Firebase Storage.
+* Salvar arquivos de evidência no Supabase Storage.
+* Salvar metadados das evidências no Cloud Firestore.
+* Registrar eventos de auditoria no Cloud Firestore.
 * Retornar URL do arquivo enviado.
-* Preparar regras básicas de segurança do Storage.
+* Preparar regras básicas de segurança do Firestore e documentar limitações do Storage.
 * Criar tratamento de erro para login e upload.
 * Criar estados de loading durante login e envio de arquivo.
 
@@ -98,7 +99,7 @@ Entregas esperadas:
 * Login real com Firebase Authentication.
 * Logout funcionando.
 * Rotas protegidas.
-* Upload real de arquivos para Firebase Storage.
+* Upload real de arquivos para Supabase Storage.
 * Arquivo `.env.example` com variáveis necessárias.
 * Código sem chaves sensíveis expostas no GitHub.
 
@@ -107,7 +108,7 @@ Critérios de conclusão:
 * Usuário consegue fazer login.
 * Usuário não acessa dashboard sem estar logado.
 * Usuário consegue sair da conta.
-* Arquivos enviados aparecem no Firebase Storage.
+* Arquivos enviados aparecem no bucket `evidencias` do Supabase Storage.
 * O sistema mostra erro caso login ou upload falhe.
 
 ---
@@ -490,20 +491,21 @@ Entrega da etapa:
 
 ---
 
-### Etapa 4: Firebase Storage para evidências
+### Etapa 4: Supabase Storage para evidências
 
 Responsável principal: Integrante 2
 Apoio: Integrante 1
 
 Tarefas:
 
-* Ativar Firebase Storage.
+* Criar bucket `evidencias` no Supabase Storage.
 * Criar função de upload.
 * Integrar upload na página de Evidências.
 * Exibir nome do arquivo selecionado.
 * Enviar arquivo para o Storage.
 * Recuperar URL do arquivo.
-* Salvar dados da evidência em estado local ou API.
+* Salvar metadados da evidência no Cloud Firestore.
+* Registrar evento em `audit_events`.
 * Exibir loading durante upload.
 * Tratar erro de upload.
 * Melhorar área visual de upload.
@@ -511,7 +513,7 @@ Tarefas:
 Entrega da etapa:
 
 * Upload real funcionando.
-* Arquivos aparecendo no Firebase Storage.
+* Arquivos aparecendo no Supabase Storage.
 * Interface mostrando feedback ao usuário.
 
 ---
@@ -801,10 +803,16 @@ Integrante 3:
 * Login com e-mail e senha funcionando.
 * Logout funcionando.
 * Rotas protegidas.
-* Storage configurado.
-* Upload de evidências funcionando.
+* Cloud Firestore configurado para perfis, evidências e auditoria.
 * Variáveis de ambiente configuradas.
 * Nenhuma chave sensível exposta diretamente no código.
+
+### Supabase Storage
+
+* Bucket `evidencias` configurado.
+* Upload de evidências funcionando.
+* URLs de arquivos retornadas para demonstração.
+* Configuração atual adequada para MVP e demonstração, mas não declarada como segura para produção.
 
 ### Banco e API
 

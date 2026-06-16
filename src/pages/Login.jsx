@@ -8,6 +8,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import SessionLoading from '../components/shared/SessionLoading';
 import { useAuth } from '../contexts/AuthContext';
+import { getFriendlyErrorMessage } from '../lib/errorMessages';
 
 const authSchema = z.object({
   mode: z.enum(['login', 'register']),
@@ -54,6 +55,8 @@ export default function Login() {
     currentUser,
     authLoading,
     loginLoading,
+    resetPasswordLoading,
+    registerLoading,
     login,
     resetPassword,
     register: registerUser,
@@ -61,8 +64,6 @@ export default function Login() {
   } = useAuth();
   const [mode, setMode] = useState('login');
   const [feedback, setFeedback] = useState(null);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [sessionLoading, setSessionLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -81,12 +82,6 @@ export default function Login() {
     reset({ ...defaultValues, mode: nextMode });
   }
 
-  async function redirectWithSessionLoading(destination) {
-    setSessionLoading(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 180));
-    navigate(destination, { replace: true });
-  }
-
   async function submit(data) {
     setFeedback(null);
 
@@ -99,34 +94,12 @@ export default function Login() {
 
       await login(data.email.trim(), data.password);
       const destination = location.state?.from?.pathname || '/dashboard';
-      await redirectWithSessionLoading(destination);
+      navigate(destination, { replace: true });
     } catch (error) {
-      setSessionLoading(false);
-
-      if (mode === 'register') {
-        if (error.code === 'auth/email-already-in-use') {
-          setFeedback({ type: 'error', message: 'Este e-mail já está cadastrado.' });
-        } else if (error.code === 'auth/weak-password') {
-          setFeedback({ type: 'error', message: 'A senha precisa ter pelo menos 6 caracteres.' });
-        } else if (error.message === 'firebase/not-configured') {
-          setFeedback({ type: 'error', message: 'Firebase não configurado. Verifique o arquivo .env.' });
-        } else {
-          setFeedback({ type: 'error', message: 'Não foi possível criar sua conta agora.' });
-        }
-        return;
-      }
-
-      if (['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password'].includes(error.code)) {
-        setFeedback({ type: 'error', message: 'E-mail ou senha inválidos.' });
-      } else if (error.code === 'auth/too-many-requests') {
-        setFeedback({ type: 'error', message: 'Muitas tentativas. Aguarde um pouco e tente novamente.' });
-      } else if (error.code === 'auth/network-request-failed') {
-        setFeedback({ type: 'error', message: 'Falha de conexão. Verifique sua internet.' });
-      } else if (error.message === 'firebase/not-configured') {
-        setFeedback({ type: 'error', message: 'Firebase não configurado. Verifique o arquivo .env.' });
-      } else {
-        setFeedback({ type: 'error', message: 'Não foi possível entrar agora.' });
-      }
+      const fallback = mode === 'register'
+        ? 'Não foi possível criar sua conta agora.'
+        : 'Não foi possível entrar agora.';
+      setFeedback({ type: 'error', message: getFriendlyErrorMessage(error, fallback) });
     }
   }
 
@@ -140,29 +113,22 @@ export default function Login() {
       return;
     }
 
-    setResetLoading(true);
-
     try {
       await resetPassword(email);
       setFeedback({ type: 'success', message: 'Enviamos um link de recuperação para o seu e-mail.' });
     } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        setFeedback({ type: 'error', message: 'Nenhuma conta encontrada com esse e-mail.' });
-      } else if (error.code === 'auth/invalid-email') {
-        setFeedback({ type: 'error', message: 'Digite um e-mail válido.' });
-      } else {
-        setFeedback({ type: 'error', message: 'Não foi possível enviar o link de recuperação agora.' });
-      }
-    } finally {
-      setResetLoading(false);
+      setFeedback({
+        type: 'error',
+        message: getFriendlyErrorMessage(error, 'Não foi possível enviar o link de recuperação agora.')
+      });
     }
   }
 
-  if (authLoading || sessionLoading) {
+  if (authLoading) {
     return <SessionLoading />;
   }
 
-  if (currentUser && !loginLoading && !isSubmitting) {
+  if (currentUser && !loginLoading && !registerLoading && !isSubmitting) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -257,11 +223,11 @@ export default function Login() {
             type="submit"
             className="full-width"
             icon={mode === 'login' ? ArrowRight : UserPlus}
-            disabled={isSubmitting || loginLoading || resetLoading}
+            disabled={isSubmitting || loginLoading || registerLoading || resetPasswordLoading}
           >
             {mode === 'login'
               ? (loginLoading ? 'Entrando...' : 'Entrar')
-              : (isSubmitting ? 'Criando conta...' : 'Criar conta')}
+              : (registerLoading || isSubmitting ? 'Criando conta...' : 'Criar conta')}
           </Button>
         </form>
 
@@ -270,9 +236,9 @@ export default function Login() {
             className="forgot-link"
             type="button"
             onClick={handleResetPassword}
-            disabled={resetLoading || loginLoading || isSubmitting}
+            disabled={resetPasswordLoading || loginLoading || registerLoading || isSubmitting}
           >
-            {resetLoading ? 'Enviando...' : 'Esqueci minha senha'}
+            {resetPasswordLoading ? 'Enviando...' : 'Esqueci minha senha'}
           </button>
         )}
 

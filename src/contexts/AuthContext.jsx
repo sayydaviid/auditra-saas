@@ -8,6 +8,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { doc, runTransaction, serverTimestamp, setDoc } from 'firebase/firestore';
+import { createAppError, logTechnicalError } from '../lib/errorMessages';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 
 const AuthContext = createContext(null);
@@ -68,6 +69,8 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   useEffect(() => {
     if (!auth) {
@@ -97,7 +100,7 @@ export function AuthProvider({ children }) {
           const profile = await loadOrCreateUserProfile(user);
           if (active && requestId === profileRequestId) setUserProfile(profile);
         } catch (error) {
-          console.error('Não foi possível carregar o perfil do usuário.', error);
+          logTechnicalError('Não foi possível carregar o perfil do usuário.', error);
           if (active && requestId === profileRequestId) setUserProfile(getFallbackProfile(user));
         } finally {
           if (active && requestId === profileRequestId) setAuthLoading(false);
@@ -119,7 +122,7 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     if (!auth) {
-      throw new Error('firebase/not-configured');
+      throw createAppError('firebase/not-configured');
     }
 
     setLoginLoading(true);
@@ -137,52 +140,66 @@ export function AuthProvider({ children }) {
 
   async function resetPassword(email) {
     if (!auth) {
-      throw new Error('firebase/not-configured');
+      throw createAppError('firebase/not-configured');
     }
 
     const normalizedEmail = email?.trim();
 
     if (!normalizedEmail) {
-      throw new Error('Informe seu e-mail para recuperar a senha.');
+      throw createAppError('auth/invalid-email');
     }
 
-    await sendPasswordResetEmail(auth, normalizedEmail);
+    setResetPasswordLoading(true);
+
+    try {
+      await sendPasswordResetEmail(auth, normalizedEmail);
+    } finally {
+      setResetPasswordLoading(false);
+    }
   }
 
   async function register({ firstName, lastName, email, password }) {
     if (!auth || !db) {
-      throw new Error('firebase/not-configured');
+      throw createAppError('firebase/not-configured');
     }
 
-    const normalizedFirstName = firstName.trim();
-    const normalizedLastName = lastName.trim();
-    const fullName = `${normalizedFirstName} ${normalizedLastName}`.trim();
-    const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-    await updateProfile(credential.user, { displayName: fullName });
+    setRegisterLoading(true);
 
-    const profile = {
-      uid: credential.user.uid,
-      firstName: normalizedFirstName,
-      lastName: normalizedLastName,
-      fullName,
-      email: credential.user.email || email.trim(),
-      role: 'Pesquisador',
-      status: 'Ativo'
-    };
+    try {
+      const normalizedFirstName = firstName.trim();
+      const normalizedLastName = lastName.trim();
+      const fullName = `${normalizedFirstName} ${normalizedLastName}`.trim();
+      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await updateProfile(credential.user, { displayName: fullName });
 
-    await setDoc(doc(db, 'users', credential.user.uid), {
-      ...profile,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+      const profile = {
+        uid: credential.user.uid,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
+        fullName,
+        email: credential.user.email || email.trim(),
+        role: 'Pesquisador',
+        status: 'Ativo'
+      };
 
-    setCurrentUser(credential.user);
-    setUserProfile(profile);
-    return credential;
+      await setDoc(doc(db, 'users', credential.user.uid), {
+        ...profile,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setCurrentUser(credential.user);
+      setUserProfile(profile);
+      return credential;
+    } finally {
+      setRegisterLoading(false);
+    }
   }
 
   async function logout() {
-    if (!auth) return;
+    if (!auth) {
+      throw createAppError('firebase/not-configured');
+    }
 
     await signOut(auth);
     setCurrentUser(null);
@@ -195,12 +212,14 @@ export function AuthProvider({ children }) {
     loading: authLoading,
     authLoading,
     loginLoading,
+    resetPasswordLoading,
+    registerLoading,
     login,
     resetPassword,
     register,
     logout,
     isFirebaseConfigured
-  }), [currentUser, userProfile, authLoading, loginLoading]);
+  }), [currentUser, userProfile, authLoading, loginLoading, resetPasswordLoading, registerLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

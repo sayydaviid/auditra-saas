@@ -6,9 +6,9 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
+import { EVIDENCE_FILE_ACCEPT, validateEvidenceFile } from '../../lib/evidenceFileValidation';
 
 const evidenceTypes = ['Documento técnico', 'Relatório', 'Código-fonte', 'Imagem', 'Planilha', 'Ata de reunião', 'Publicação', 'Outro'];
-const maxFileSize = 10 * 1024 * 1024;
 
 const schema = z.object({
   project: z.string().min(1, 'Projeto obrigatório'),
@@ -18,11 +18,17 @@ const schema = z.object({
   activityRelated: z.string().optional(),
   file: z
     .any()
-    .refine((files) => files?.length > 0, 'Arquivo obrigatório')
-    .refine((files) => !files?.[0] || files[0].size <= maxFileSize, 'Arquivo deve ter até 10 MB')
+    .refine((files) => files?.length > 0, 'Selecione um arquivo para enviar.')
+    .refine((files) => !files?.[0] || validateEvidenceFile(files[0]).code !== 'file/too-large', 'O arquivo deve ter no máximo 10 MB.')
+    .refine((files) => !files?.[0] || validateEvidenceFile(files[0]).code !== 'file/invalid-format', 'Formato de arquivo não permitido.')
 });
 
-export default function EvidenceForm({ projects = [], onSubmit }) {
+export default function EvidenceForm({
+  projects = [],
+  onSubmit,
+  uploadLoading = false,
+  savingMetadataLoading = false
+}) {
   const {
     register,
     handleSubmit,
@@ -42,6 +48,14 @@ export default function EvidenceForm({ projects = [], onSubmit }) {
   });
 
   const selectedFile = watch('file')?.[0];
+  const submitDisabled = isSubmitting || uploadLoading || savingMetadataLoading;
+  const submitLabel = uploadLoading
+    ? 'Enviando arquivo...'
+    : savingMetadataLoading
+      ? 'Salvando metadados...'
+      : isSubmitting
+        ? 'Enviando evidência...'
+        : 'Enviar evidência';
 
   async function submit(data) {
     const { file, ...payload } = data;
@@ -54,7 +68,7 @@ export default function EvidenceForm({ projects = [], onSubmit }) {
   }
 
   return (
-    <form className="form-grid" onSubmit={handleSubmit(submit)}>
+    <form className="form-grid" onSubmit={handleSubmit(submit)} aria-busy={submitDisabled}>
       <Select label="Projeto" options={projects.map((project) => ({ value: project.id, label: project.name }))} error={errors.project?.message} {...register('project')} />
       <Select label="Tipo de evidência" options={evidenceTypes} error={errors.type?.message} {...register('type')} />
       <Input label="Título" error={errors.title?.message} {...register('title')} />
@@ -64,11 +78,11 @@ export default function EvidenceForm({ projects = [], onSubmit }) {
         <UploadCloud size={34} />
         <strong>{selectedFile?.name || 'Clique para selecionar um arquivo'}</strong>
         <span>O arquivo será enviado com segurança para o Supabase Storage.</span>
-        <input type="file" {...register('file')} />
+        <input type="file" accept={EVIDENCE_FILE_ACCEPT} {...register('file')} />
       </label>
       {errors.file && <small className="field-error field-full">{errors.file.message}</small>}
       <div className="form-actions field-full">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Enviando evidência...' : 'Enviar evidência'}</Button>
+        <Button type="submit" disabled={submitDisabled}>{submitLabel}</Button>
       </div>
     </form>
   );

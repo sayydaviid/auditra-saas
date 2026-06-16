@@ -1,9 +1,10 @@
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { createAppError } from '../lib/errorMessages';
 import { db } from '../lib/firebase';
 
 export async function listAuditEvents() {
   if (!db) {
-    throw new Error('Cloud Firestore não configurado. Verifique as variáveis VITE_FIREBASE_*.');
+    throw createAppError('firebase/not-configured');
   }
 
   const auditQuery = query(

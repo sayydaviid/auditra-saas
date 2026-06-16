@@ -13,8 +13,10 @@ import {
   Users,
   X
 } from 'lucide-react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { getFriendlyErrorMessage, logTechnicalError } from '../../lib/errorMessages';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
@@ -32,10 +34,22 @@ const navItems = [
 export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
 
   async function handleLogout() {
-    await logout();
-    navigate('/login', { replace: true });
+    setLogoutError('');
+    setLogoutLoading(true);
+
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      logTechnicalError('Falha ao sair da conta.', error);
+      setLogoutError(getFriendlyErrorMessage(error, 'Não foi possível sair da conta agora.'));
+    } finally {
+      setLogoutLoading(false);
+    }
   }
 
   return (
@@ -76,9 +90,10 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-link logout" type="button" onClick={handleLogout}>
+        {logoutError && !collapsed && <div className="form-feedback error" role="alert">{logoutError}</div>}
+        <button className="sidebar-link logout" type="button" onClick={handleLogout} disabled={logoutLoading}>
           <LogOut size={19} />
-          {!collapsed && <span>Sair</span>}
+          {!collapsed && <span>{logoutLoading ? 'Saindo...' : 'Sair'}</span>}
         </button>
       </div>
     </aside>

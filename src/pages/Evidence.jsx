@@ -9,6 +9,7 @@ import Card from '../components/ui/Card';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import { useAuth } from '../contexts/AuthContext';
+import { isAuditraAdmin } from '../config/permissions';
 import { projects } from '../data/mockData';
 import { getFriendlyErrorMessage, logTechnicalError } from '../lib/errorMessages';
 import { listEvidences, uploadEvidence } from '../services/evidenceService';
@@ -26,20 +27,39 @@ function formatTimestamp(value) {
   return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
+function getProjectById(projectId) {
+  return projects.find((projectItem) => projectItem.id === projectId);
+}
+
 function normalizeEvidence(item) {
-  const project = projects.find((projectItem) => projectItem.id === item.projectId);
+  const project = getProjectById(item.projectId);
 
   return {
     ...item,
     project: project?.name || item.projectId || 'Projeto não informado',
-    type: item.evidenceType || 'Não informado',
-    owner: item.userName || item.userEmail || 'Usuário não informado',
+    companyId: item.companyId || project?.companyId || '',
+    companyName: item.companyName || project?.company || '',
+    type: item.evidenceType || item.type || 'Não informado',
+    owner: item.userName || item.userEmail || item.owner || 'Usuário não informado',
     date: formatTimestamp(item.createdAt)
   };
 }
 
+function belongsToUserCompany(item, userProfile) {
+  if (isAuditraAdmin(userProfile)) {
+    return true;
+  }
+
+  if (!userProfile?.companyId) {
+    return false;
+  }
+
+  return item.companyId === userProfile.companyId;
+}
+
 export default function Evidence() {
   const { currentUser, userProfile } = useAuth();
+
   const [items, setItems] = useState([]);
   const [projectFilter, setProjectFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -49,6 +69,18 @@ export default function Evidence() {
   const [listError, setListError] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   const [savingMetadataLoading, setSavingMetadataLoading] = useState(false);
+
+  const visibleProjects = useMemo(() => {
+    if (isAuditraAdmin(userProfile)) {
+      return projects;
+    }
+
+    return projects.filter((project) => project.companyId === userProfile?.companyId);
+  }, [userProfile]);
+
+  const scopedItems = useMemo(() => {
+    return items.filter((item) => belongsToUserCompany(item, userProfile));
+  }, [items, userProfile]);
 
   async function loadEvidenceList() {
     setIsLoading(true);
@@ -71,21 +103,42 @@ export default function Evidence() {
   }, []);
 
   const filtered = useMemo(() => {
-    return items.filter((item) => {
+    return scopedItems.filter((item) => {
       const byProject = !projectFilter || item.projectId === projectFilter;
       const byType = !typeFilter || item.type === typeFilter;
       const byStatus = !statusFilter || item.status === statusFilter;
+
       return byProject && byType && byStatus;
     });
-  }, [items, projectFilter, typeFilter, statusFilter]);
+  }, [scopedItems, projectFilter, typeFilter, statusFilter]);
 
   async function handleCreate(data) {
     setFeedback(null);
+
+    const selectedProject = getProjectById(data.project);
+
+    if (!selectedProject) {
+      setFeedback({
+        type: 'error',
+        message: 'Selecione um projeto válido para enviar a evidência.'
+      });
+      return;
+    }
+
+    if (!isAuditraAdmin(userProfile) && selectedProject.companyId !== userProfile?.companyId) {
+      setFeedback({
+        type: 'error',
+        message: 'Você só pode enviar evidências para projetos da sua empresa.'
+      });
+      return;
+    }
 
     try {
       const result = await uploadEvidence({
         file: data.file,
         projectId: data.project,
+        companyId: selectedProject.companyId,
+        companyName: selectedProject.company,
         title: data.title,
         description: data.description,
         evidenceType: data.type,
@@ -100,6 +153,7 @@ export default function Evidence() {
         onMetadataSaveStart: () => setSavingMetadataLoading(true),
         onMetadataSaveEnd: () => setSavingMetadataLoading(false)
       });
+
       await loadEvidenceList();
 
       if (result.auditEventStatus === 'failed') {
@@ -136,6 +190,7 @@ export default function Evidence() {
       )
     },
     { key: 'project', label: 'Projeto' },
+    { key: 'companyName', label: 'Empresa', render: (row) => row.companyName || '-' },
     { key: 'type', label: 'Tipo' },
     { key: 'fileName', label: 'Arquivo' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
@@ -150,8 +205,8 @@ export default function Evidence() {
     }
   ];
 
-  const approvedCount = items.filter((item) => item.status === 'Aprovada').length;
-  const pendingCount = items.filter((item) => item.status === 'Enviada' || item.status === 'Em análise').length;
+  const approvedCount = scopedItems.filter((item) => item.status === 'Aprovada').length;
+  const pendingCount = scopedItems.filter((item) => item.status === 'Enviada' || item.status === 'Em análise').length;
 
   return (
     <div className="page-stack">
@@ -161,15 +216,16 @@ export default function Evidence() {
       />
 
       <div className="stats-grid three-cards">
-        <StatCard title="Evidências enviadas" value={items.length} subtitle="Base atual" icon={FileUp} />
+        <StatCard title="Evidências enviadas" value={scopedItems.length} subtitle="Base visível para seu perfil" icon={FileUp} />
         <StatCard title="Aprovadas" value={approvedCount} subtitle="Validadas pelo gestor" icon={CheckCircle2} tone="green" />
         <StatCard title="Pendentes" value={pendingCount} subtitle="Aguardando análise" icon={ClipboardList} tone="orange" />
       </div>
 
       <Card title="Enviar nova evidência" description="Arquivo no Supabase Storage e metadados no Cloud Firestore.">
         {feedback && <div className={`form-feedback ${feedback.type}`}>{feedback.message}</div>}
+
         <EvidenceForm
-          projects={projects}
+          projects={visibleProjects}
           onSubmit={handleCreate}
           uploadLoading={uploadLoading}
           savingMetadataLoading={savingMetadataLoading}
@@ -180,15 +236,31 @@ export default function Evidence() {
         <div className="filters-row compact">
           <Select
             label="Projeto"
-            options={projects.map((project) => ({ value: project.id, label: project.name }))}
+            options={visibleProjects.map((project) => ({ value: project.id, label: project.name }))}
             value={projectFilter}
             onChange={(event) => setProjectFilter(event.target.value)}
             placeholder="Todos"
           />
-          <Select label="Tipo" options={evidenceTypes} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} placeholder="Todos" />
-          <Select label="Status" options={statuses} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} placeholder="Todos" />
+
+          <Select
+            label="Tipo"
+            options={evidenceTypes}
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            placeholder="Todos"
+          />
+
+          <Select
+            label="Status"
+            options={statuses}
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            placeholder="Todos"
+          />
         </div>
+
         {listError && <div className="form-feedback error">{listError}</div>}
+
         {isLoading
           ? <div className="content-loading">Carregando evidências...</div>
           : <Table columns={columns} data={filtered} emptyTitle="Nenhuma evidência enviada ainda." />}

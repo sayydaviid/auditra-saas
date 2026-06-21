@@ -10,24 +10,64 @@ import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
+import { useAuth } from '../contexts/AuthContext';
+import { isAuditraAdmin } from '../config/permissions';
 import { projects } from '../data/mockData';
 
 const statuses = ['Ativo', 'Em revisão', 'Pendente', 'Finalizado'];
 const risks = ['Baixo', 'Médio', 'Alto'];
 
+function normalizeText(value = '') {
+  return value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function belongsToUserCompany(project, userProfile) {
+  if (isAuditraAdmin(userProfile)) {
+    return true;
+  }
+
+  const userCompanyId = userProfile?.companyId;
+  const userCompanyName = userProfile?.companyName;
+
+  if (!userCompanyId && !userCompanyName) {
+    return false;
+  }
+
+  if (project.companyId && userCompanyId) {
+    return project.companyId === userCompanyId;
+  }
+
+  return normalizeText(project.company) === normalizeText(userCompanyName);
+}
+
 export default function Projects() {
+  const { userProfile } = useAuth();
+
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [risk, setRisk] = useState('');
 
+  const scopedProjects = useMemo(() => {
+    return projects.filter((project) => belongsToUserCompany(project, userProfile));
+  }, [userProfile]);
+
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const matchesSearch = `${project.name} ${project.company} ${project.responsible}`.toLowerCase().includes(search.toLowerCase());
+    return scopedProjects.filter((project) => {
+      const matchesSearch = `${project.name} ${project.company} ${project.responsible}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
       const matchesStatus = !status || project.status === status;
       const matchesRisk = !risk || project.risk === risk;
+
       return matchesSearch && matchesStatus && matchesRisk;
     });
-  }, [search, status, risk]);
+  }, [scopedProjects, search, status, risk]);
 
   const columns = [
     {
@@ -50,9 +90,15 @@ export default function Projects() {
       label: 'Ações',
       render: (project) => (
         <div className="table-actions">
-          <Link className="icon-action" to={`/projetos/${project.id}`} title="Ver detalhes"><Eye size={17} /></Link>
-          <button className="icon-action" type="button" title="Editar"><Edit3 size={17} /></button>
-          <button className="icon-action" type="button" title="Gerar relatório"><FileText size={17} /></button>
+          <Link className="icon-action" to={`/projetos/${project.id}`} title="Ver detalhes">
+            <Eye size={17} />
+          </Link>
+          <button className="icon-action" type="button" title="Editar">
+            <Edit3 size={17} />
+          </button>
+          <button className="icon-action" type="button" title="Gerar relatório">
+            <FileText size={17} />
+          </button>
         </div>
       )
     }
@@ -68,9 +114,28 @@ export default function Projects() {
 
       <Card>
         <div className="filters-row">
-          <Input label="Buscar" placeholder="Nome, empresa ou responsável" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <Select label="Status" options={statuses} value={status} onChange={(event) => setStatus(event.target.value)} placeholder="Todos os status" />
-          <Select label="Risco" options={risks} value={risk} onChange={(event) => setRisk(event.target.value)} placeholder="Todos os riscos" />
+          <Input
+            label="Buscar"
+            placeholder="Nome, empresa ou responsável"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+
+          <Select
+            label="Status"
+            options={statuses}
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            placeholder="Todos os status"
+          />
+
+          <Select
+            label="Risco"
+            options={risks}
+            value={risk}
+            onChange={(event) => setRisk(event.target.value)}
+            placeholder="Todos os riscos"
+          />
         </div>
       </Card>
 

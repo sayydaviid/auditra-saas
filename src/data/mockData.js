@@ -1,10 +1,20 @@
+export const COMPANY_IDS = {
+  BIOAMAZONIA: 'bioamazonia-labs',
+  NEOTEC: 'neotec-energia',
+  UFNORTE: 'universidade-federal-do-norte',
+  INOVADATA: 'inovadata-analytics',
+  AGROTECH: 'agrotech-norte',
+  QUANTUMHUB: 'quantumhub-instituto'
+};
+
 export const users = [
   {
     id: 'u1',
     name: 'Marina Azevedo',
     email: 'marina.azevedo@bioamazonia.com.br',
-    profile: 'Administrador',
+    profile: 'Administrador Empresa',
     company: 'BioAmazônia Labs',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     status: 'Ativo',
     lastAccess: '10/06/2026 09:18',
     avatar: 'MA'
@@ -15,6 +25,7 @@ export const users = [
     email: 'rafael.costa@neotec.com.br',
     profile: 'Gestor de P&D',
     company: 'NeoTec Energia',
+    companyId: COMPANY_IDS.NEOTEC,
     status: 'Ativo',
     lastAccess: '09/06/2026 17:45',
     avatar: 'RC'
@@ -25,6 +36,7 @@ export const users = [
     email: 'camila.barros@ufnorte.edu.br',
     profile: 'Pesquisador',
     company: 'Universidade Federal do Norte',
+    companyId: COMPANY_IDS.UFNORTE,
     status: 'Ativo',
     lastAccess: '10/06/2026 08:02',
     avatar: 'CB'
@@ -35,6 +47,7 @@ export const users = [
     email: 'joao.mendes@inovadata.com.br',
     profile: 'Financeiro/Compliance',
     company: 'InovaData Analytics',
+    companyId: COMPANY_IDS.INOVADATA,
     status: 'Ativo',
     lastAccess: '08/06/2026 15:12',
     avatar: 'JM'
@@ -45,6 +58,7 @@ export const users = [
     email: 'patricia.lima@agrotech.com.br',
     profile: 'Gestor de P&D',
     company: 'AgroTech Norte',
+    companyId: COMPANY_IDS.AGROTECH,
     status: 'Pendente',
     lastAccess: 'Nunca acessou',
     avatar: 'PL'
@@ -55,6 +69,7 @@ export const users = [
     email: 'lucas.pereira@quantumhub.org',
     profile: 'Pesquisador',
     company: 'QuantumHub Instituto',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     status: 'Inativo',
     lastAccess: '29/05/2026 11:30',
     avatar: 'LP'
@@ -63,7 +78,8 @@ export const users = [
 
 export const companies = [
   {
-    id: 'c1',
+    id: COMPANY_IDS.BIOAMAZONIA,
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     name: 'BioAmazônia Labs',
     cnpj: '14.832.991/0001-45',
     segment: 'Biotecnologia',
@@ -72,7 +88,8 @@ export const companies = [
     responsible: 'Marina Azevedo'
   },
   {
-    id: 'c2',
+    id: COMPANY_IDS.NEOTEC,
+    companyId: COMPANY_IDS.NEOTEC,
     name: 'NeoTec Energia',
     cnpj: '28.554.770/0001-18',
     segment: 'Energia e Sustentabilidade',
@@ -81,7 +98,8 @@ export const companies = [
     responsible: 'Rafael Costa'
   },
   {
-    id: 'c3',
+    id: COMPANY_IDS.UFNORTE,
+    companyId: COMPANY_IDS.UFNORTE,
     name: 'Universidade Federal do Norte',
     cnpj: '05.112.430/0001-20',
     segment: 'Pesquisa Acadêmica',
@@ -90,7 +108,8 @@ export const companies = [
     responsible: 'Camila Barros'
   },
   {
-    id: 'c4',
+    id: COMPANY_IDS.INOVADATA,
+    companyId: COMPANY_IDS.INOVADATA,
     name: 'InovaData Analytics',
     cnpj: '33.190.224/0001-71',
     segment: 'Inteligência Artificial',
@@ -99,7 +118,8 @@ export const companies = [
     responsible: 'João Mendes'
   },
   {
-    id: 'c5',
+    id: COMPANY_IDS.AGROTECH,
+    companyId: COMPANY_IDS.AGROTECH,
     name: 'AgroTech Norte',
     cnpj: '41.667.910/0001-03',
     segment: 'Agritech',
@@ -108,7 +128,8 @@ export const companies = [
     responsible: 'Patrícia Lima'
   },
   {
-    id: 'c6',
+    id: COMPANY_IDS.QUANTUMHUB,
+    companyId: COMPANY_IDS.QUANTUMHUB,
     name: 'QuantumHub Instituto',
     cnpj: '19.402.811/0001-62',
     segment: 'Segurança e IoT',
@@ -123,6 +144,7 @@ export const projects = [
     id: 'p1',
     name: 'Plataforma de rastreabilidade para bioinsumos',
     company: 'BioAmazônia Labs',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     responsible: 'Marina Azevedo',
     status: 'Ativo',
     period: 'Jan/2026 - Dez/2026',
@@ -138,6 +160,7 @@ export const projects = [
     id: 'p2',
     name: 'Modelo preditivo de consumo energético',
     company: 'NeoTec Energia',
+    companyId: COMPANY_IDS.NEOTEC,
     responsible: 'Rafael Costa',
     status: 'Em revisão',
     period: 'Mar/2026 - Nov/2026',
@@ -153,6 +176,7 @@ export const projects = [
     id: 'p3',
     name: 'Sensores IoT para monitoramento ambiental',
     company: 'Universidade Federal do Norte',
+    companyId: COMPANY_IDS.UFNORTE,
     responsible: 'Camila Barros',
     status: 'Ativo',
     period: 'Fev/2026 - Fev/2027',
@@ -168,6 +192,7 @@ export const projects = [
     id: 'p4',
     name: 'Motor de recomendação para análise documental',
     company: 'InovaData Analytics',
+    companyId: COMPANY_IDS.INOVADATA,
     responsible: 'João Mendes',
     status: 'Pendente',
     period: 'Abr/2026 - Out/2026',
@@ -183,6 +208,7 @@ export const projects = [
     id: 'p5',
     name: 'Sistema de irrigação inteligente para pequenos produtores',
     company: 'AgroTech Norte',
+    companyId: COMPANY_IDS.AGROTECH,
     responsible: 'Patrícia Lima',
     status: 'Ativo',
     period: 'Mai/2026 - Abr/2027',
@@ -198,6 +224,7 @@ export const projects = [
     id: 'p6',
     name: 'Framework de segurança pós-quântica para IoT',
     company: 'QuantumHub Instituto',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     responsible: 'Lucas Pereira',
     status: 'Finalizado',
     period: 'Ago/2025 - Mai/2026',
@@ -215,6 +242,7 @@ export const timeEntries = [
   {
     id: 'h1',
     projectId: 'p1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     date: '2026-06-09',
     hours: 6,
@@ -228,6 +256,7 @@ export const timeEntries = [
   {
     id: 'h2',
     projectId: 'p2',
+    companyId: COMPANY_IDS.NEOTEC,
     project: 'Modelo preditivo de consumo energético',
     date: '2026-06-08',
     hours: 4.5,
@@ -241,6 +270,7 @@ export const timeEntries = [
   {
     id: 'h3',
     projectId: 'p3',
+    companyId: COMPANY_IDS.UFNORTE,
     project: 'Sensores IoT para monitoramento ambiental',
     date: '2026-06-07',
     hours: 5,
@@ -254,6 +284,7 @@ export const timeEntries = [
   {
     id: 'h4',
     projectId: 'p4',
+    companyId: COMPANY_IDS.INOVADATA,
     project: 'Motor de recomendação para análise documental',
     date: '2026-06-06',
     hours: 3,
@@ -267,6 +298,7 @@ export const timeEntries = [
   {
     id: 'h5',
     projectId: 'p5',
+    companyId: COMPANY_IDS.AGROTECH,
     project: 'Sistema de irrigação inteligente para pequenos produtores',
     date: '2026-06-05',
     hours: 7,
@@ -280,6 +312,7 @@ export const timeEntries = [
   {
     id: 'h6',
     projectId: 'p6',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     project: 'Framework de segurança pós-quântica para IoT',
     date: '2026-06-04',
     hours: 6.5,
@@ -296,6 +329,7 @@ export const evidence = [
   {
     id: 'e1',
     projectId: 'p1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     type: 'Documento técnico',
     title: 'Arquitetura do módulo de rastreabilidade',
@@ -309,6 +343,7 @@ export const evidence = [
   {
     id: 'e2',
     projectId: 'p2',
+    companyId: COMPANY_IDS.NEOTEC,
     project: 'Modelo preditivo de consumo energético',
     type: 'Planilha',
     title: 'Base consolidada de consumo',
@@ -322,6 +357,7 @@ export const evidence = [
   {
     id: 'e3',
     projectId: 'p3',
+    companyId: COMPANY_IDS.UFNORTE,
     project: 'Sensores IoT para monitoramento ambiental',
     type: 'Imagem',
     title: 'Protótipo instalado em campo',
@@ -335,6 +371,7 @@ export const evidence = [
   {
     id: 'e4',
     projectId: 'p4',
+    companyId: COMPANY_IDS.INOVADATA,
     project: 'Motor de recomendação para análise documental',
     type: 'Código-fonte',
     title: 'Pipeline inicial de classificação',
@@ -348,6 +385,7 @@ export const evidence = [
   {
     id: 'e5',
     projectId: 'p5',
+    companyId: COMPANY_IDS.AGROTECH,
     project: 'Sistema de irrigação inteligente para pequenos produtores',
     type: 'Relatório',
     title: 'Validação de sensores de umidade',
@@ -361,6 +399,7 @@ export const evidence = [
   {
     id: 'e6',
     projectId: 'p6',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     project: 'Framework de segurança pós-quântica para IoT',
     type: 'Documento técnico',
     title: 'Resultados finais de benchmarks pós-quânticos',
@@ -376,6 +415,7 @@ export const evidence = [
 export const approvals = [
   {
     id: 'a1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     type: 'Horas',
     requester: 'Marina Azevedo',
@@ -386,6 +426,7 @@ export const approvals = [
   },
   {
     id: 'a2',
+    companyId: COMPANY_IDS.NEOTEC,
     project: 'Modelo preditivo de consumo energético',
     type: 'Evidência',
     requester: 'Rafael Costa',
@@ -396,6 +437,7 @@ export const approvals = [
   },
   {
     id: 'a3',
+    companyId: COMPANY_IDS.UFNORTE,
     project: 'Sensores IoT para monitoramento ambiental',
     type: 'Relatório',
     requester: 'Camila Barros',
@@ -406,6 +448,7 @@ export const approvals = [
   },
   {
     id: 'a4',
+    companyId: COMPANY_IDS.INOVADATA,
     project: 'Motor de recomendação para análise documental',
     type: 'Evidência',
     requester: 'João Mendes',
@@ -416,6 +459,7 @@ export const approvals = [
   },
   {
     id: 'a5',
+    companyId: COMPANY_IDS.AGROTECH,
     project: 'Sistema de irrigação inteligente para pequenos produtores',
     type: 'Horas',
     requester: 'Patrícia Lima',
@@ -429,6 +473,7 @@ export const approvals = [
 export const reports = [
   {
     id: 'r1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     period: 'Maio/2026',
     status: 'Pronto',
@@ -437,6 +482,7 @@ export const reports = [
   },
   {
     id: 'r2',
+    companyId: COMPANY_IDS.NEOTEC,
     project: 'Modelo preditivo de consumo energético',
     period: 'Maio/2026',
     status: 'Aguardando revisão',
@@ -445,6 +491,7 @@ export const reports = [
   },
   {
     id: 'r3',
+    companyId: COMPANY_IDS.UFNORTE,
     project: 'Sensores IoT para monitoramento ambiental',
     period: 'Maio/2026',
     status: 'Aprovado',
@@ -453,6 +500,7 @@ export const reports = [
   },
   {
     id: 'r4',
+    companyId: COMPANY_IDS.INOVADATA,
     project: 'Motor de recomendação para análise documental',
     period: 'Maio/2026',
     status: 'Em geração',
@@ -461,6 +509,7 @@ export const reports = [
   },
   {
     id: 'r5',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     project: 'Framework de segurança pós-quântica para IoT',
     period: 'Maio/2026',
     status: 'Aprovado',
@@ -472,6 +521,7 @@ export const reports = [
 export const auditEvents = [
   {
     id: 'ev1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     datetime: '10/06/2026 09:12',
     user: 'Marina Azevedo',
     action: 'Usuário registrou horas',
@@ -482,6 +532,7 @@ export const auditEvents = [
   },
   {
     id: 'ev2',
+    companyId: COMPANY_IDS.NEOTEC,
     datetime: '09/06/2026 16:40',
     user: 'Rafael Costa',
     action: 'Evidência enviada',
@@ -492,6 +543,7 @@ export const auditEvents = [
   },
   {
     id: 'ev3',
+    companyId: COMPANY_IDS.INOVADATA,
     datetime: '09/06/2026 11:05',
     user: 'João Mendes',
     action: 'Correção solicitada',
@@ -502,6 +554,7 @@ export const auditEvents = [
   },
   {
     id: 'ev4',
+    companyId: COMPANY_IDS.UFNORTE,
     datetime: '08/06/2026 14:22',
     user: 'Camila Barros',
     action: 'Evidência aprovada',
@@ -512,6 +565,7 @@ export const auditEvents = [
   },
   {
     id: 'ev5',
+    companyId: COMPANY_IDS.AGROTECH,
     datetime: '07/06/2026 10:18',
     user: 'Patrícia Lima',
     action: 'Custo vinculado',
@@ -522,6 +576,7 @@ export const auditEvents = [
   },
   {
     id: 'ev6',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     datetime: '06/06/2026 17:30',
     user: 'Marina Azevedo',
     action: 'Relatório gerado',
@@ -532,6 +587,7 @@ export const auditEvents = [
   },
   {
     id: 'ev7',
+    companyId: COMPANY_IDS.NEOTEC,
     datetime: '05/06/2026 15:45',
     user: 'Rafael Costa',
     action: 'Projeto alterado',
@@ -542,6 +598,7 @@ export const auditEvents = [
   },
   {
     id: 'ev8',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     datetime: '04/06/2026 13:15',
     user: 'Lucas Pereira',
     action: 'Relatório final aprovado',
@@ -556,6 +613,7 @@ export const costs = [
   {
     id: 'cost1',
     projectId: 'p1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     category: 'Equipe técnica',
     value: 210000,
@@ -564,6 +622,7 @@ export const costs = [
   {
     id: 'cost2',
     projectId: 'p1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     project: 'Plataforma de rastreabilidade para bioinsumos',
     category: 'Infraestrutura',
     value: 98500,
@@ -572,6 +631,7 @@ export const costs = [
   {
     id: 'cost3',
     projectId: 'p2',
+    companyId: COMPANY_IDS.NEOTEC,
     project: 'Modelo preditivo de consumo energético',
     category: 'Consultoria técnica',
     value: 74000,
@@ -580,6 +640,7 @@ export const costs = [
   {
     id: 'cost4',
     projectId: 'p5',
+    companyId: COMPANY_IDS.AGROTECH,
     project: 'Sistema de irrigação inteligente para pequenos produtores',
     category: 'Equipamentos',
     value: 62400,
@@ -588,6 +649,7 @@ export const costs = [
   {
     id: 'cost5',
     projectId: 'p6',
+    companyId: COMPANY_IDS.QUANTUMHUB,
     project: 'Framework de segurança pós-quântica para IoT',
     category: 'Infraestrutura de testes',
     value: 118400,
@@ -637,24 +699,28 @@ export const validationTimeChart = [
 export const alerts = [
   {
     id: 'al1',
+    companyId: COMPANY_IDS.INOVADATA,
     title: 'Projeto com baixa taxa de preenchimento de horas',
     description: 'Motor de recomendação para análise documental está com 42% de preenchimento no mês.',
     severity: 'warning'
   },
   {
     id: 'al2',
+    companyId: COMPANY_IDS.NEOTEC,
     title: 'Evidência pendente há mais de 7 dias',
     description: 'Base consolidada de consumo ainda aguarda validação do gestor responsável.',
     severity: 'danger'
   },
   {
     id: 'al3',
+    companyId: COMPANY_IDS.NEOTEC,
     title: 'Relatório aguardando aprovação',
     description: 'Relatório de Maio/2026 do projeto NeoTec Energia precisa de revisão final.',
     severity: 'warning'
   },
   {
     id: 'al4',
+    companyId: COMPANY_IDS.INOVADATA,
     title: 'Projeto com risco documental alto',
     description: 'Faltam evidências mínimas no projeto de análise documental.',
     severity: 'danger'
@@ -664,6 +730,7 @@ export const alerts = [
 export const recentActivities = [
   {
     id: 'ra1',
+    companyId: COMPANY_IDS.UFNORTE,
     title: 'Evidência técnica aprovada',
     description: 'Relatório de campo validado no projeto Sensores IoT.',
     time: 'há 32 min',
@@ -671,6 +738,7 @@ export const recentActivities = [
   },
   {
     id: 'ra2',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     title: 'Novo registro de horas',
     description: 'Marina Azevedo registrou 6h em desenvolvimento.',
     time: 'há 1h',
@@ -678,6 +746,7 @@ export const recentActivities = [
   },
   {
     id: 'ra3',
+    companyId: COMPANY_IDS.INOVADATA,
     title: 'Correção solicitada',
     description: 'Pipeline de classificação precisa de documentação complementar.',
     time: 'ontem',
@@ -685,6 +754,7 @@ export const recentActivities = [
   },
   {
     id: 'ra4',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     title: 'Relatório mensal gerado',
     description: 'Relatório de Maio/2026 disponível para revisão.',
     time: '2 dias atrás',
@@ -696,6 +766,7 @@ export const projectPendingItems = [
   {
     id: 'pd1',
     projectId: 'p1',
+    companyId: COMPANY_IDS.BIOAMAZONIA,
     title: 'Revisar evidência de arquitetura',
     owner: 'Compliance',
     dueDate: '12/06/2026',
@@ -704,6 +775,7 @@ export const projectPendingItems = [
   {
     id: 'pd2',
     projectId: 'p2',
+    companyId: COMPANY_IDS.NEOTEC,
     title: 'Aprovar relatório de validação',
     owner: 'Gestor de P&D',
     dueDate: '14/06/2026',
@@ -712,6 +784,7 @@ export const projectPendingItems = [
   {
     id: 'pd3',
     projectId: 'p4',
+    companyId: COMPANY_IDS.INOVADATA,
     title: 'Anexar documento técnico complementar',
     owner: 'Pesquisador',
     dueDate: '11/06/2026',
@@ -725,6 +798,7 @@ export const dashboardCriticalProjects = projects
     id: project.id,
     name: project.name,
     company: project.company,
+    companyId: project.companyId,
     completion: project.completion,
     risk: project.risk,
     status: project.status

@@ -7,36 +7,77 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
+import { useAuth } from '../contexts/AuthContext';
+import { isAuditraAdmin } from '../config/permissions';
 import { approvals, projects } from '../data/mockData';
 import { updateApprovalStatus } from '../lib/api';
 
 const types = ['Horas', 'Evidência', 'Relatório'];
 const statuses = ['Pendente', 'Aprovado', 'Correção solicitada', 'Reprovado'];
 
+function belongsToUserCompany(item, userProfile) {
+  if (isAuditraAdmin(userProfile)) {
+    return true;
+  }
+
+  if (!userProfile?.companyId) {
+    return false;
+  }
+
+  return item.companyId === userProfile.companyId;
+}
+
 export default function Approvals() {
+  const { userProfile } = useAuth();
+
   const [items, setItems] = useState(approvals);
   const [projectFilter, setProjectFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [feedback, setFeedback] = useState('');
 
-  const filtered = useMemo(() => items.filter((item) => {
+  const visibleProjects = useMemo(() => {
+    if (isAuditraAdmin(userProfile)) {
+      return projects;
+    }
+
+    return projects.filter((project) => project.companyId === userProfile?.companyId);
+  }, [userProfile]);
+
+  const scopedItems = useMemo(() => {
+    return items.filter((item) => belongsToUserCompany(item, userProfile));
+  }, [items, userProfile]);
+
+  const filtered = useMemo(() => scopedItems.filter((item) => {
     const byProject = !projectFilter || item.project === projectFilter;
     const byType = !typeFilter || item.type === typeFilter;
     const byStatus = !statusFilter || item.status === statusFilter;
+
     return byProject && byType && byStatus;
-  }), [items, projectFilter, typeFilter, statusFilter]);
+  }), [scopedItems, projectFilter, typeFilter, statusFilter]);
 
   async function changeStatus(id, status) {
+    const target = scopedItems.find((item) => item.id === id);
+
+    if (!target) {
+      setFeedback('Você não tem permissão para alterar este item.');
+      window.setTimeout(() => setFeedback(''), 3000);
+      return;
+    }
+
     await updateApprovalStatus(id, status);
-    setItems((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
+
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, status } : item))
+    );
+
     setFeedback(`Status atualizado para: ${status}.`);
     window.setTimeout(() => setFeedback(''), 3000);
   }
 
-  const pendingCount = items.filter((item) => item.status === 'Pendente').length;
-  const approvedCount = items.filter((item) => item.status === 'Aprovado').length;
-  const rejectedCount = items.filter((item) => item.status === 'Reprovado').length;
+  const pendingCount = scopedItems.filter((item) => item.status === 'Pendente').length;
+  const approvedCount = scopedItems.filter((item) => item.status === 'Aprovado').length;
+  const rejectedCount = scopedItems.filter((item) => item.status === 'Reprovado').length;
 
   const columns = [
     {
@@ -58,9 +99,17 @@ export default function Approvals() {
       label: 'Ações',
       render: (row) => (
         <div className="approval-actions">
-          <Button size="sm" variant="success" onClick={() => changeStatus(row.id, 'Aprovado')}>Aprovar</Button>
-          <Button size="sm" variant="warning" onClick={() => changeStatus(row.id, 'Correção solicitada')}>Solicitar correção</Button>
-          <Button size="sm" variant="danger" onClick={() => changeStatus(row.id, 'Reprovado')}>Reprovar</Button>
+          <Button size="sm" variant="success" onClick={() => changeStatus(row.id, 'Aprovado')}>
+            Aprovar
+          </Button>
+
+          <Button size="sm" variant="warning" onClick={() => changeStatus(row.id, 'Correção solicitada')}>
+            Solicitar correção
+          </Button>
+
+          <Button size="sm" variant="danger" onClick={() => changeStatus(row.id, 'Reprovado')}>
+            Reprovar
+          </Button>
         </div>
       )
     }
@@ -68,23 +117,78 @@ export default function Approvals() {
 
   return (
     <div className="page-stack">
-      <PageHeader title="Aprovações" description="Valide horas, evidências e relatórios mantendo rastreabilidade das decisões." />
+      <PageHeader
+        title="Aprovações"
+        description="Valide horas, evidências e relatórios mantendo rastreabilidade das decisões."
+      />
 
       <div className="stats-grid four-cards">
-        <StatCard title="Pendentes" value={pendingCount} subtitle="Na fila de validação" icon={Clock} tone="orange" />
-        <StatCard title="Aprovadas no mês" value={approvedCount} subtitle="Validações concluídas" icon={CheckCheck} tone="green" />
-        <StatCard title="Reprovadas" value={rejectedCount} subtitle="Itens rejeitados" icon={XCircle} tone="red" />
-        <StatCard title="Tempo médio" value="2,8 dias" subtitle="Média de validação" icon={RotateCcw} />
+        <StatCard
+          title="Pendentes"
+          value={pendingCount}
+          subtitle="Na fila de validação"
+          icon={Clock}
+          tone="orange"
+        />
+
+        <StatCard
+          title="Aprovadas no mês"
+          value={approvedCount}
+          subtitle="Validações concluídas"
+          icon={CheckCheck}
+          tone="green"
+        />
+
+        <StatCard
+          title="Reprovadas"
+          value={rejectedCount}
+          subtitle="Itens rejeitados"
+          icon={XCircle}
+          tone="red"
+        />
+
+        <StatCard
+          title="Tempo médio"
+          value="2,8 dias"
+          subtitle="Média de validação"
+          icon={RotateCcw}
+        />
       </div>
 
       <Card title="Itens para validação" description={`${filtered.length} item(ns) na lista`}>
         {feedback && <div className="form-feedback success">{feedback}</div>}
+
         <div className="filters-row compact">
-          <Select label="Projeto" options={projects.map((project) => project.name)} value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} placeholder="Todos" />
-          <Select label="Tipo" options={types} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} placeholder="Todos" />
-          <Select label="Status" options={statuses} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} placeholder="Todos" />
+          <Select
+            label="Projeto"
+            options={visibleProjects.map((project) => project.name)}
+            value={projectFilter}
+            onChange={(event) => setProjectFilter(event.target.value)}
+            placeholder="Todos"
+          />
+
+          <Select
+            label="Tipo"
+            options={types}
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            placeholder="Todos"
+          />
+
+          <Select
+            label="Status"
+            options={statuses}
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            placeholder="Todos"
+          />
         </div>
-        <Table columns={columns} data={filtered} emptyTitle="Nenhuma aprovação encontrada" />
+
+        <Table
+          columns={columns}
+          data={filtered}
+          emptyTitle="Nenhuma aprovação encontrada"
+        />
       </Card>
     </div>
   );

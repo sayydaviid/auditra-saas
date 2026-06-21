@@ -7,6 +7,8 @@ import Timeline from '../components/shared/Timeline';
 import Card from '../components/ui/Card';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
+import { useAuth } from '../contexts/AuthContext';
+import { isAuditraAdmin } from '../config/permissions';
 import { projects } from '../data/mockData';
 import { getFriendlyErrorMessage, logTechnicalError } from '../lib/errorMessages';
 import { listAuditEvents } from '../services/auditService';
@@ -26,7 +28,10 @@ function formatDate(value) {
     return 'Processando...';
   }
 
-  return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })}`;
 }
 
 function normalizeAuditEvent(item) {
@@ -34,6 +39,8 @@ function normalizeAuditEvent(item) {
 
   return {
     ...item,
+    companyId: item.companyId || project?.companyId || '',
+    companyName: item.companyName || project?.company || '',
     datetime: formatDate(item.createdAt),
     eventDate: toDate(item.createdAt),
     user: item.userName || item.userEmail || 'Usuário não informado',
@@ -66,7 +73,21 @@ function matchesPeriod(eventDate, period) {
   return true;
 }
 
+function belongsToUserCompany(item, userProfile) {
+  if (isAuditraAdmin(userProfile)) {
+    return true;
+  }
+
+  if (!userProfile?.companyId) {
+    return false;
+  }
+
+  return item.companyId === userProfile.companyId;
+}
+
 export default function Audit() {
+  const { userProfile } = useAuth();
+
   const [items, setItems] = useState([]);
   const [projectFilter, setProjectFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
@@ -77,6 +98,9 @@ export default function Audit() {
 
   useEffect(() => {
     async function loadEvents() {
+      setIsLoading(true);
+      setError('');
+
       try {
         const result = await listAuditEvents();
         setItems(result.map(normalizeAuditEvent));
@@ -91,16 +115,34 @@ export default function Audit() {
     loadEvents();
   }, []);
 
-  const eventTypes = useMemo(() => [...new Set(items.map((item) => item.type).filter(Boolean))], [items]);
-  const eventUsers = useMemo(() => [...new Set(items.map((item) => item.user).filter(Boolean))], [items]);
+  const visibleProjects = useMemo(() => {
+    if (isAuditraAdmin(userProfile)) {
+      return projects;
+    }
 
-  const filtered = useMemo(() => items.filter((event) => {
+    return projects.filter((project) => project.companyId === userProfile?.companyId);
+  }, [userProfile]);
+
+  const scopedItems = useMemo(() => {
+    return items.filter((item) => belongsToUserCompany(item, userProfile));
+  }, [items, userProfile]);
+
+  const eventTypes = useMemo(() => {
+    return [...new Set(scopedItems.map((item) => item.type).filter(Boolean))];
+  }, [scopedItems]);
+
+  const eventUsers = useMemo(() => {
+    return [...new Set(scopedItems.map((item) => item.user).filter(Boolean))];
+  }, [scopedItems]);
+
+  const filtered = useMemo(() => scopedItems.filter((event) => {
     const byProject = !projectFilter || event.projectId === projectFilter;
     const byUser = !userFilter || event.user === userFilter;
     const byType = !typeFilter || event.type === typeFilter;
     const byPeriod = matchesPeriod(event.eventDate, periodFilter);
+
     return byProject && byUser && byType && byPeriod;
-  }), [items, projectFilter, userFilter, typeFilter, periodFilter]);
+  }), [scopedItems, projectFilter, userFilter, typeFilter, periodFilter]);
 
   const columns = [
     { key: 'datetime', label: 'Data e hora' },
@@ -116,6 +158,7 @@ export default function Audit() {
       )
     },
     { key: 'project', label: 'Projeto' },
+    { key: 'companyName', label: 'Empresa', render: (row) => row.companyName || '-' },
     { key: 'type', label: 'Tipo' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> }
   ];
@@ -128,40 +171,89 @@ export default function Audit() {
       />
 
       <div className="stats-grid four-cards">
-        <StatCard title="Eventos registrados" value={items.length} subtitle="Na trilha atual" icon={ShieldCheck} />
-        <StatCard title="Usuários envolvidos" value={eventUsers.length} subtitle="Com ações recentes" icon={UserCheck} tone="green" />
-        <StatCard title="Tipos de evento" value={eventTypes.length} subtitle="Categorias auditáveis" icon={FileSearch} tone="blue" />
-        <StatCard title="Período filtrado" value={periodFilter} subtitle="Filtro visual" icon={CalendarClock} tone="orange" />
+        <StatCard
+          title="Eventos registrados"
+          value={scopedItems.length}
+          subtitle="Eventos visíveis para seu perfil"
+          icon={ShieldCheck}
+        />
+
+        <StatCard
+          title="Usuários envolvidos"
+          value={eventUsers.length}
+          subtitle="Com ações recentes"
+          icon={UserCheck}
+          tone="green"
+        />
+
+        <StatCard
+          title="Tipos de evento"
+          value={eventTypes.length}
+          subtitle="Categorias auditáveis"
+          icon={FileSearch}
+          tone="blue"
+        />
+
+        <StatCard
+          title="Período filtrado"
+          value={periodFilter}
+          subtitle="Filtro visual"
+          icon={CalendarClock}
+          tone="orange"
+        />
       </div>
 
       <Card title="Filtros de auditoria" description="Refine a trilha por projeto, usuário, tipo de evento e período.">
         <div className="filters-row compact">
           <Select
             label="Projeto"
-            options={projects.map((project) => ({ value: project.id, label: project.name }))}
+            options={visibleProjects.map((project) => ({ value: project.id, label: project.name }))}
             value={projectFilter}
             onChange={(event) => setProjectFilter(event.target.value)}
             placeholder="Todos"
           />
-          <Select label="Usuário" options={eventUsers} value={userFilter} onChange={(event) => setUserFilter(event.target.value)} placeholder="Todos" />
-          <Select label="Tipo de evento" options={eventTypes} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} placeholder="Todos" />
-          <Select label="Período" options={periods} value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)} placeholder="Todo o período" />
+
+          <Select
+            label="Usuário"
+            options={eventUsers}
+            value={userFilter}
+            onChange={(event) => setUserFilter(event.target.value)}
+            placeholder="Todos"
+          />
+
+          <Select
+            label="Tipo de evento"
+            options={eventTypes}
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            placeholder="Todos"
+          />
+
+          <Select
+            label="Período"
+            options={periods}
+            value={periodFilter}
+            onChange={(event) => setPeriodFilter(event.target.value)}
+            placeholder="Todo o período"
+          />
         </div>
       </Card>
 
       {error && <div className="form-feedback error">{error}</div>}
-      {isLoading
-        ? <div className="content-loading">Carregando eventos de auditoria...</div>
-        : (
-          <div className="dashboard-grid two-columns audit-layout">
-            <Card title="Linha do tempo auditável" description="Eventos exibidos em ordem recente">
-              <Timeline items={filtered} />
-            </Card>
-            <Card title="Tabela de eventos" description="Visual detalhado para auditoria e conferência">
-              <Table columns={columns} data={filtered} emptyTitle="Nenhum evento encontrado" />
-            </Card>
-          </div>
-        )}
+
+      {isLoading ? (
+        <div className="content-loading">Carregando eventos de auditoria...</div>
+      ) : (
+        <div className="dashboard-grid two-columns audit-layout">
+          <Card title="Linha do tempo auditável" description="Eventos exibidos em ordem recente">
+            <Timeline items={filtered} />
+          </Card>
+
+          <Card title="Tabela de eventos" description="Visual detalhado para auditoria e conferência">
+            <Table columns={columns} data={filtered} emptyTitle="Nenhum evento encontrado" />
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

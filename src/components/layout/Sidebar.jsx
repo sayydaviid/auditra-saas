@@ -17,25 +17,30 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getFriendlyErrorMessage, logTechnicalError } from '../../lib/errorMessages';
+import { hasPermission } from '../../config/permissions';
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
-  { label: 'Projetos', path: '/projetos', icon: FolderKanban },
-  { label: 'Registro de Horas', path: '/horas', icon: FileClock },
-  { label: 'Evidências', path: '/evidencias', icon: ClipboardList },
-  { label: 'Aprovações', path: '/aprovacoes', icon: CheckSquare },
-  { label: 'Relatórios', path: '/relatorios', icon: FileText },
-  { label: 'Auditoria', path: '/auditoria', icon: ShieldCheck },
-  { label: 'Empresas', path: '/empresas', icon: Building2 },
-  { label: 'Usuários', path: '/usuarios', icon: Users },
-  { label: 'Configurações', path: '/configuracoes', icon: Settings }
+  { label: 'Dashboard', path: '/dashboard', icon: BarChart3, permission: 'dashboard:view' },
+  { label: 'Projetos', path: '/projetos', icon: FolderKanban, permission: 'projects:view' },
+  { label: 'Registro de Horas', path: '/horas', icon: FileClock, permission: 'time:view' },
+  { label: 'Evidências', path: '/evidencias', icon: ClipboardList, permission: 'evidence:view' },
+  { label: 'Aprovações', path: '/aprovacoes', icon: CheckSquare, permission: 'approvals:view' },
+  { label: 'Relatórios', path: '/relatorios', icon: FileText, permission: 'reports:view' },
+  { label: 'Auditoria', path: '/auditoria', icon: ShieldCheck, permission: 'audit:view' },
+  { label: 'Empresas', path: '/empresas', icon: Building2, permission: 'companies:view' },
+  { label: 'Usuários', path: '/usuarios', icon: Users, permission: 'users:view' },
+  { label: 'Configurações', path: '/configuracoes', icon: Settings, permission: 'settings:view' }
 ];
 
 export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, userProfile } = useAuth();
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutError, setLogoutError] = useState('');
+
+  const visibleNavItems = navItems.filter((item) =>
+    hasPermission(userProfile?.role, item.permission)
+  );
 
   async function handleLogout() {
     setLogoutError('');
@@ -58,7 +63,9 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile
         <button className="mobile-close" type="button" onClick={onCloseMobile} aria-label="Fechar menu">
           <X size={20} />
         </button>
+
         <div className="brand-mark">A</div>
+
         {!collapsed && (
           <div>
             <strong>Auditra</strong>
@@ -73,8 +80,9 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile
       </button>
 
       <nav className="sidebar-nav" aria-label="Menu principal">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const Icon = item.icon;
+
           return (
             <NavLink
               key={item.path}
@@ -90,7 +98,12 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile
       </nav>
 
       <div className="sidebar-footer">
-        {logoutError && !collapsed && <div className="form-feedback error" role="alert">{logoutError}</div>}
+        {logoutError && !collapsed && (
+          <div className="form-feedback error" role="alert">
+            {logoutError}
+          </div>
+        )}
+
         <button className="sidebar-link logout" type="button" onClick={handleLogout} disabled={logoutLoading}>
           <LogOut size={19} />
           {!collapsed && <span>{logoutLoading ? 'Saindo...' : 'Sair'}</span>}

@@ -13,6 +13,13 @@ import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 
 const AuthContext = createContext(null);
 
+const DEFAULT_PROFILE = {
+  role: 'Pesquisador',
+  status: 'Pendente',
+  companyId: '',
+  companyName: ''
+};
+
 function getNameParts(displayName = '') {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
 
@@ -31,8 +38,10 @@ function getFallbackProfile(user) {
     lastName,
     fullName: user?.displayName || user?.email || 'Usuário',
     email: user?.email || '',
-    role: 'Pesquisador',
-    status: 'Ativo'
+    role: DEFAULT_PROFILE.role,
+    status: DEFAULT_PROFILE.status,
+    companyId: DEFAULT_PROFILE.companyId,
+    companyName: DEFAULT_PROFILE.companyName
   };
 }
 
@@ -44,6 +53,7 @@ async function loadOrCreateUserProfile(user) {
   }
 
   const userRef = doc(db, 'users', user.uid);
+
   return runTransaction(db, async (transaction) => {
     const userSnapshot = await transaction.get(userRef);
 
@@ -85,6 +95,7 @@ export function AuthProvider({ children }) {
       auth,
       async (user) => {
         if (!active) return;
+
         const requestId = ++profileRequestId;
 
         if (!user) {
@@ -98,16 +109,25 @@ export function AuthProvider({ children }) {
 
         try {
           const profile = await loadOrCreateUserProfile(user);
-          if (active && requestId === profileRequestId) setUserProfile(profile);
+
+          if (active && requestId === profileRequestId) {
+            setUserProfile(profile);
+          }
         } catch (error) {
           logTechnicalError('Não foi possível carregar o perfil do usuário.', error);
-          if (active && requestId === profileRequestId) setUserProfile(getFallbackProfile(user));
+
+          if (active && requestId === profileRequestId) {
+            setUserProfile(getFallbackProfile(user));
+          }
         } finally {
-          if (active && requestId === profileRequestId) setAuthLoading(false);
+          if (active && requestId === profileRequestId) {
+            setAuthLoading(false);
+          }
         }
       },
       () => {
         if (!active) return;
+
         setCurrentUser(null);
         setUserProfile(null);
         setAuthLoading(false);
@@ -130,8 +150,10 @@ export function AuthProvider({ children }) {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const profile = await loadOrCreateUserProfile(credential.user);
+
       setCurrentUser(credential.user);
       setUserProfile(profile);
+
       return credential;
     } finally {
       setLoginLoading(false);
@@ -168,8 +190,11 @@ export function AuthProvider({ children }) {
     try {
       const normalizedFirstName = firstName.trim();
       const normalizedLastName = lastName.trim();
+      const normalizedEmail = email.trim();
       const fullName = `${normalizedFirstName} ${normalizedLastName}`.trim();
-      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+
+      const credential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+
       await updateProfile(credential.user, { displayName: fullName });
 
       const profile = {
@@ -177,9 +202,11 @@ export function AuthProvider({ children }) {
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
         fullName,
-        email: credential.user.email || email.trim(),
-        role: 'Pesquisador',
-        status: 'Ativo'
+        email: credential.user.email || normalizedEmail,
+        role: DEFAULT_PROFILE.role,
+        status: DEFAULT_PROFILE.status,
+        companyId: DEFAULT_PROFILE.companyId,
+        companyName: DEFAULT_PROFILE.companyName
       };
 
       await setDoc(doc(db, 'users', credential.user.uid), {
@@ -190,6 +217,7 @@ export function AuthProvider({ children }) {
 
       setCurrentUser(credential.user);
       setUserProfile(profile);
+
       return credential;
     } finally {
       setRegisterLoading(false);
@@ -202,6 +230,7 @@ export function AuthProvider({ children }) {
     }
 
     await signOut(auth);
+
     setCurrentUser(null);
     setUserProfile(null);
   }
@@ -219,7 +248,14 @@ export function AuthProvider({ children }) {
     register,
     logout,
     isFirebaseConfigured
-  }), [currentUser, userProfile, authLoading, loginLoading, resetPasswordLoading, registerLoading]);
+  }), [
+    currentUser,
+    userProfile,
+    authLoading,
+    loginLoading,
+    resetPasswordLoading,
+    registerLoading
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

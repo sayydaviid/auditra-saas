@@ -20,21 +20,55 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
+
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/projetos" element={<Projects />} />
-          <Route path="/projetos/:id" element={<ProjectDetail />} />
-          <Route path="/horas" element={<TimeEntries />} />
-          <Route path="/evidencias" element={<Evidence />} />
-          <Route path="/aprovacoes" element={<Approvals />} />
-          <Route path="/relatorios" element={<Reports />} />
-          <Route path="/auditoria" element={<Audit />} />
-          <Route path="/empresas" element={<Companies />} />
-          <Route path="/usuarios" element={<Users />} />
-          <Route path="/configuracoes" element={<Settings />} />
+          <Route element={<ProtectedRoute permission="dashboard:view" />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="projects:view" />}>
+            <Route path="/projetos" element={<Projects />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="projects:detail" />}>
+            <Route path="/projetos/:id" element={<ProjectDetail />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="time:view" />}>
+            <Route path="/horas" element={<TimeEntries />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="evidence:view" />}>
+            <Route path="/evidencias" element={<Evidence />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="approvals:view" />}>
+            <Route path="/aprovacoes" element={<Approvals />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="reports:view" />}>
+            <Route path="/relatorios" element={<Reports />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="audit:view" />}>
+            <Route path="/auditoria" element={<Audit />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="companies:view" />}>
+            <Route path="/empresas" element={<Companies />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="users:view" />}>
+            <Route path="/usuarios" element={<Users />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="settings:view" />}>
+            <Route path="/configuracoes" element={<Settings />} />
+          </Route>
         </Route>
       </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

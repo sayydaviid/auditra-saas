@@ -11,6 +11,7 @@ import ProjectDetail from '../pages/ProjectDetail';
 import Projects from '../pages/Projects';
 import Reports from '../pages/Reports';
 import Settings from '../pages/Settings';
+import Support from '../pages/Support';
 import TimeEntries from '../pages/TimeEntries';
 import Users from '../pages/Users';
 import ProtectedRoute from './ProtectedRoute';
@@ -53,6 +54,10 @@ export default function AppRoutes() {
 
           <Route element={<ProtectedRoute permission="audit:view" />}>
             <Route path="/auditoria" element={<Audit />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission="support:view" />}>
+            <Route path="/atendimento" element={<Support />} />
           </Route>
 
           <Route element={<ProtectedRoute permission="companies:view" />}>

@@ -18,7 +18,12 @@ export const ROLE_PERMISSIONS = {
     'audit:view',
     'companies:view',
     'users:view',
-    'settings:view'
+    'settings:view',
+
+    'support:view',
+    'support:create',
+    'support:reply',
+    'support:manage'
   ],
 
   [ROLES.COMPANY_ADMIN]: [
@@ -31,7 +36,10 @@ export const ROLE_PERMISSIONS = {
     'reports:view',
     'audit:view',
     'users:view',
-    'settings:view'
+    'settings:view',
+
+    'support:view',
+    'support:create'
   ],
 
   [ROLES.R_AND_D_MANAGER]: [
@@ -41,7 +49,10 @@ export const ROLE_PERMISSIONS = {
     'time:view',
     'evidence:view',
     'approvals:view',
-    'reports:view'
+    'reports:view',
+
+    'support:view',
+    'support:create'
   ],
 
   [ROLES.RESEARCHER]: [
@@ -49,14 +60,20 @@ export const ROLE_PERMISSIONS = {
     'projects:view',
     'projects:detail',
     'time:view',
-    'evidence:view'
+    'evidence:view',
+
+    'support:view',
+    'support:create'
   ],
 
   [ROLES.FINANCE_COMPLIANCE]: [
     'dashboard:view',
     'approvals:view',
     'reports:view',
-    'audit:view'
+    'audit:view',
+
+    'support:view',
+    'support:create'
   ]
 };
 
@@ -71,4 +88,12 @@ export function hasPermission(role, permission) {
 
 export function isAuditraAdmin(userProfile) {
   return userProfile?.role === ROLES.AUDITRA_ADMIN;
+}
+
+export function canReplySupport(userProfile) {
+  return hasPermission(userProfile?.role, 'support:reply');
+}
+
+export function canManageSupport(userProfile) {
+  return hasPermission(userProfile?.role, 'support:manage');
 }

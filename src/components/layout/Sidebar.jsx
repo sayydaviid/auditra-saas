@@ -8,6 +8,7 @@ import {
   FolderKanban,
   LogOut,
   Menu,
+  MessageCircle,
   Settings,
   ShieldCheck,
   Users,
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Aprovações', path: '/aprovacoes', icon: CheckSquare, permission: 'approvals:view' },
   { label: 'Relatórios', path: '/relatorios', icon: FileText, permission: 'reports:view' },
   { label: 'Auditoria', path: '/auditoria', icon: ShieldCheck, permission: 'audit:view' },
+  { label: 'Atendimento', path: '/atendimento', icon: MessageCircle, permission: 'support:view' },
   { label: 'Empresas', path: '/empresas', icon: Building2, permission: 'companies:view' },
   { label: 'Usuários', path: '/usuarios', icon: Users, permission: 'users:view' },
   { label: 'Configurações', path: '/configuracoes', icon: Settings, permission: 'settings:view' }
